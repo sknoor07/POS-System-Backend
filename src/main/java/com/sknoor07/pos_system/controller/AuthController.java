@@ -3,7 +3,7 @@ package com.sknoor07.pos_system.controller;
 import com.sknoor07.pos_system.Service.AuthService;
 import com.sknoor07.pos_system.exceptions.UserException;
 import com.sknoor07.pos_system.payload.dto.UserDTO;
-import com.sknoor07.pos_system.payload.response.AuthResposne;
+import com.sknoor07.pos_system.payload.response.AuthResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,8 +19,8 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/signup")
-    public ResponseEntity<AuthResposne> signupHandler(@RequestBody UserDTO userDTO) throws UserException {
-        AuthResposne response = authService.SignUp(userDTO);
+    public ResponseEntity<AuthResponse> signupHandler(@RequestBody UserDTO userDTO) throws UserException {
+        AuthResponse response = authService.signUp(userDTO);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -28,10 +28,10 @@ public class AuthController {
     }
 
     @PostMapping("/signin")
-    public ResponseEntity<AuthResposne> signinHandler(@RequestBody UserDTO userDTO) throws UserException {
-        AuthResposne response = authService.SignIn(userDTO);
+    public ResponseEntity<AuthResponse> signinHandler(@RequestBody UserDTO userDTO) throws UserException {
+        AuthResponse response = authService.signIn(userDTO);
         return ResponseEntity
-                .status(HttpStatus.ACCEPTED)
+                .status(HttpStatus.OK)
                 .body(response);
     }
 }

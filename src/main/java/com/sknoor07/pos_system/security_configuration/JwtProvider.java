@@ -10,6 +10,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
@@ -23,7 +24,7 @@ public class JwtProvider {
     private String secret;
 
     private SecretKey getSigningKey() {
-        return Keys.hmacShaKeyFor(secret.getBytes());
+        return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 
     public String generateJwtToken(Authentication authentication) {
@@ -32,7 +33,7 @@ public class JwtProvider {
         return Jwts
                 .builder()
                 .issuedAt(new Date())
-                .expiration(new Date(new Date().getTime()+864000))
+                .expiration(new Date(new Date().getTime()+86400000))
                 .claim("email",authentication.getName())
                 .claim("authorities",roles)
                 .signWith(getSigningKey())
@@ -41,7 +42,7 @@ public class JwtProvider {
     }
 
     public String getEmailFromJwtToken(String token) {
-            token= token.replace("Bearer ", "");
+            token= token.substring(7);
             Claims claims= Jwts.parser()
                 .verifyWith(getSigningKey())
                 .build()

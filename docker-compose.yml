@@ -1,4 +1,3 @@
-docker-compose.yml configuration for local infrastructure:
 services:
   mysql:
     image: mysql:8-oracle
@@ -10,6 +9,3 @@ services:
       MYSQL_DATABASE: pos-system-database
     ports:
       - "3306:3306"
-
-To start it:
-docker compose up -d

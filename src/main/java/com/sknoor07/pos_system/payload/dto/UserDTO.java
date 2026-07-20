@@ -1,7 +1,7 @@
 package com.sknoor07.pos_system.payload.dto;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.sknoor07.pos_system.modals.userRole;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.sknoor07.pos_system.modals.UserRole;
 import lombok.Data;
 import java.time.LocalDateTime;
 
@@ -16,9 +16,10 @@ public class UserDTO {
 
     private String phoneNumber;
 
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
 
-    private userRole role;
+    private UserRole role;
 
-    private LocalDateTime createdAt, updatedAt, lastLoginAt;;
+    private LocalDateTime createdAt, updatedAt, lastLoginAt;
 }

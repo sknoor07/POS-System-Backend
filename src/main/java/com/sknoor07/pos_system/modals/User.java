@@ -31,15 +31,8 @@ public class User {
     private String phoneNumber;
 
     @Column(nullable = false)
-    private userRole role;
+    private UserRole role;
 
     private LocalDateTime createdAt, updatedAt, lastLoginAt;
 
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public Long getId() {
-        return id;
-    }
 }

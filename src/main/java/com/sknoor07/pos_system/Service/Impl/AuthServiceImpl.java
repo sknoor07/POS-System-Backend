@@ -5,9 +5,9 @@ import com.sknoor07.pos_system.exceptions.UserException;
 import com.sknoor07.pos_system.mapper.UserMapper;
 
 import com.sknoor07.pos_system.modals.User;
-import com.sknoor07.pos_system.modals.userRole;
+import com.sknoor07.pos_system.modals.UserRole;
 import com.sknoor07.pos_system.payload.dto.UserDTO;
-import com.sknoor07.pos_system.payload.response.AuthResposne;
+import com.sknoor07.pos_system.payload.response.AuthResponse;
 import com.sknoor07.pos_system.repository.UserRepository;
 import com.sknoor07.pos_system.security_configuration.JwtProvider;
 import lombok.RequiredArgsConstructor;
@@ -32,30 +32,26 @@ public class AuthServiceImpl implements AuthService {
     private final CustomUserimplementation customUserimplementation;
 
     @Override
-    public AuthResposne SignUp(UserDTO userDto) throws UserException {
+    public AuthResponse signUp(UserDTO userDto) throws UserException {
         User user= userRepository.findByEmail(userDto.getEmail());
         if(user!=null){
             throw new UserException(" Email id is already registered...");
         }
-        if (userDto.getRole().equals(userRole.ROLE_ADMIN)){
+        if (UserRole.ROLE_ADMIN.equals(userDto.getRole())){
             throw new UserException(" Role admin is not allowed...");
         }
-        System.out.println("Password from request = " + userDto.getPassword());
 
         String encodedPassword = passwordEncoder.encode(userDto.getPassword());
-
-        System.out.println("Encoded password = " + encodedPassword);
 
         User newUser= new User();
         newUser.setEmail(userDto.getEmail());
         newUser.setPassword(encodedPassword);
         newUser.setRole(userDto.getRole());
         newUser.setFullName(userDto.getFullName());
-        newUser.setPhoneNumber(String.valueOf(userDto.getPhoneNumber()));
+        newUser.setPhoneNumber(userDto.getPhoneNumber());
         newUser.setLastLoginAt(LocalDateTime.now());
         newUser.setCreatedAt(LocalDateTime.now());
         newUser.setUpdatedAt(LocalDateTime.now());
-        System.out.println("Password in entity = " + newUser.getPassword());
         User SavedUser=userRepository.save(newUser);
 
         GrantedAuthority authority = new SimpleGrantedAuthority(SavedUser.getRole().name());
@@ -67,16 +63,16 @@ public class AuthServiceImpl implements AuthService {
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String jwt = jwtProvider.generateJwtToken(authentication);
 
-        AuthResposne authResposne = new AuthResposne();
-        authResposne.setJwt(jwt);
-        authResposne.setMessage("Registered Successfully");
-        authResposne.setUser(UserMapper.toDTO(SavedUser));
+        AuthResponse authResponse = new AuthResponse();
+        authResponse.setJwt(jwt);
+        authResponse.setMessage("Registered Successfully");
+        authResponse.setUser(UserMapper.toDTO(SavedUser));
 
-        return authResposne;
+        return authResponse;
     }
 
     @Override
-    public AuthResposne SignIn(UserDTO userDto) throws UserException {
+    public AuthResponse signIn(UserDTO userDto) throws UserException {
         String email = userDto.getEmail();
         String password = userDto.getPassword();
         Authentication authentication = authenticate(email,password);
@@ -89,22 +85,20 @@ public class AuthServiceImpl implements AuthService {
         user.setLastLoginAt(LocalDateTime.now());
         userRepository.save(user);
 
-        AuthResposne authResposne = new AuthResposne();
-        authResposne.setJwt(jwt);
-        authResposne.setMessage("LoggedIn Successfully");
-        authResposne.setUser(UserMapper.toDTO(user));
+        AuthResponse authResponse = new AuthResponse();
+        authResponse.setJwt(jwt);
+        authResponse.setMessage("LoggedIn Successfully");
+        authResponse.setUser(UserMapper.toDTO(user));
 
-        return authResposne;
+        return authResponse;
     }
 
     private Authentication authenticate(String email, String password) throws UserException {
         UserDetails userDetails = customUserimplementation.loadUserByUsername(email);
 
-        if(userDetails==null){
-            throw new UserException("user "+email+" Not Found");
-        }
         if(!passwordEncoder.matches(password,userDetails.getPassword())){
             throw new UserException("password does not match");
         }
-    return new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());}
+        return new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+    }
 }
