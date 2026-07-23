@@ -1,6 +1,6 @@
 package com.sknoor07.pos_system.modals.store;
 
-import com.sknoor07.pos_system.modals.User;
+import com.sknoor07.pos_system.modals.user.User;
 import jakarta.persistence.*;
 import lombok.*;
 

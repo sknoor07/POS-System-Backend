@@ -3,7 +3,8 @@ package com.sknoor07.pos_system.controller;
 import com.sknoor07.pos_system.Service.UserService;
 import com.sknoor07.pos_system.exceptions.UserException;
 import com.sknoor07.pos_system.mapper.UserMapper;
-import com.sknoor07.pos_system.modals.User;
+import com.sknoor07.pos_system.modals.user.User;
+import com.sknoor07.pos_system.modals.user.UserRole;
 import com.sknoor07.pos_system.payload.dto.UserDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -24,6 +25,13 @@ public class UserController {
 
     @GetMapping("/{id}")
     public ResponseEntity<UserDTO> getUserById(@RequestHeader("Authorization") String jwtToken, @PathVariable Long id) throws UserException {
+        User requester = userService.getUserFromJwtToken(jwtToken);
+        if (requester == null || (!requester.getId().equals(id) && 
+                requester.getRole() != UserRole.ROLE_ADMIN && 
+                requester.getRole() != UserRole.ROLE_STORE_MANAGER && 
+                requester.getRole() != UserRole.ROLE_BRANCH_MANAGER)) {
+            throw new UserException("Access denied: You do not have permission to access this profile.");
+        }
         User user=userService.getUserByuId(id);
         return ResponseEntity.status(HttpStatus.OK).body(UserMapper.toDTO(user));
     }

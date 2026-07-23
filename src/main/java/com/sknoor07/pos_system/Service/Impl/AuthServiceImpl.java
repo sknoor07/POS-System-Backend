@@ -4,8 +4,8 @@ import com.sknoor07.pos_system.Service.AuthService;
 import com.sknoor07.pos_system.exceptions.UserException;
 import com.sknoor07.pos_system.mapper.UserMapper;
 
-import com.sknoor07.pos_system.modals.User;
-import com.sknoor07.pos_system.modals.UserRole;
+import com.sknoor07.pos_system.modals.user.User;
+import com.sknoor07.pos_system.modals.user.UserRole;
 import com.sknoor07.pos_system.payload.dto.UserDTO;
 import com.sknoor07.pos_system.payload.response.AuthResponse;
 import com.sknoor07.pos_system.repository.UserRepository;

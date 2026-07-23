@@ -1,11 +1,10 @@
-package com.sknoor07.pos_system.modals;
+package com.sknoor07.pos_system.modals.user;
 
 import com.sknoor07.pos_system.modals.store.Store;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import lombok.*;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -22,7 +21,7 @@ public class User {
     @Column(nullable = false)
     private String fullName;
 
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne
     private Store store;
 
     @Column(nullable = false,unique = true)

@@ -1,7 +1,7 @@
 package com.sknoor07.pos_system.Service;
 
 import com.sknoor07.pos_system.exceptions.UserException;
-import com.sknoor07.pos_system.modals.User;
+import com.sknoor07.pos_system.modals.user.User;
 
 import java.util.List;
 

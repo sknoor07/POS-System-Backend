@@ -4,15 +4,13 @@ import com.sknoor07.pos_system.Service.StoreService;
 import com.sknoor07.pos_system.Service.UserService;
 import com.sknoor07.pos_system.exceptions.UserException;
 import com.sknoor07.pos_system.mapper.StoreMapper;
-import com.sknoor07.pos_system.modals.User;
-import com.sknoor07.pos_system.modals.store.Store;
+import com.sknoor07.pos_system.modals.user.User;
 import com.sknoor07.pos_system.modals.store.StoreStatus;
 import com.sknoor07.pos_system.payload.dto.StoreDTO;
 import com.sknoor07.pos_system.payload.response.ApiResposne;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -66,7 +64,7 @@ public class StoreController {
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResposne> deleteStore(@PathVariable Long id) throws UserException {
         storeService.deleteStore(id);
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(new ApiResposne("Store deleted Successfully"));
+        return ResponseEntity.status(HttpStatus.OK).body(new ApiResposne("Store deleted Successfully"));
     }
 
     @PutMapping("/{id}/moderate")

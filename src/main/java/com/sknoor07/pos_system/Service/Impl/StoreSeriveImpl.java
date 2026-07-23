@@ -4,7 +4,7 @@ import com.sknoor07.pos_system.Service.StoreService;
 import com.sknoor07.pos_system.Service.UserService;
 import com.sknoor07.pos_system.exceptions.UserException;
 import com.sknoor07.pos_system.mapper.StoreMapper;
-import com.sknoor07.pos_system.modals.User;
+import com.sknoor07.pos_system.modals.user.User;
 import com.sknoor07.pos_system.modals.store.Store;
 import com.sknoor07.pos_system.modals.store.StoreContact;
 import com.sknoor07.pos_system.modals.store.StoreStatus;
@@ -56,7 +56,7 @@ public class StoreSeriveImpl implements StoreService {
     public StoreDTO updateStore(Long id, StoreDTO storeDTO) throws UserException {
         User currentUser= userService.getCurrentUser();
         Store existingStore = storeRepository.findByStoreAdminId(currentUser.getId());
-        if(existingStore==null) {
+        if(existingStore ==null) {
             throw new UserException("INVALID ID, STORE NOT FOUND");
         }
         existingStore.setBrandName(storeDTO.getBrandName());
@@ -84,7 +84,14 @@ public class StoreSeriveImpl implements StoreService {
     @Override
     public Store getStoreByAdmin() throws UserException {
         User admin= userService.getCurrentUser();
-        return storeRepository.findByStoreAdminId(admin.getId());
+        Store store;
+        try{
+            store =storeRepository.findByStoreAdminId(admin.getId());
+        }catch(Exception e) {
+            throw new UserException("INVALID ID, STORE NOT FOUND");
+        }
+
+        return store;
     }
 
     @Override
