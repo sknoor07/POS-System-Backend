@@ -1,10 +1,11 @@
 package com.sknoor07.pos_system.repository;
 
-import com.sknoor07.pos_system.modals.User;
+import com.sknoor07.pos_system.modals.store.Store;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface UserRepository extends JpaRepository<User, Long> {
-    User findByEmail(String email);
+public interface StoreRepository extends JpaRepository<Store, Long> {
+
+    Store findByStoreAdminId(Long id);
 }
