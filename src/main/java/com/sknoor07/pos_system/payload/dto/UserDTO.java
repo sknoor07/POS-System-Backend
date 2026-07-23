@@ -1,7 +1,7 @@
 package com.sknoor07.pos_system.payload.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.sknoor07.pos_system.modals.UserRole;
+import com.sknoor07.pos_system.modals.user.UserRole;
 import lombok.Data;
 import java.time.LocalDateTime;
 
