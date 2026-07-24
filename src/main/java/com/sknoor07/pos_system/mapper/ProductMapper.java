@@ -16,7 +16,7 @@ public class ProductMapper {
                 .mrp(product.getMrp())
                 .sellingPrice(product.getSellingPrice())
                 .brand(product.getBrand())
-                .categoryDTO(CategoryMapper.tocategoryDTO(product.getCategory()))
+                .categoryDTO(product.getCategory() == null ? null : CategoryMapper.tocategoryDTO(product.getCategory()))
                 .storeId(product.getStore()!=null?product.getStore().getId():null)
                 .createdAt(product.getCreatedAt())
                 .categoryId(product.getCategory()!=null?product.getCategory().getId():null)

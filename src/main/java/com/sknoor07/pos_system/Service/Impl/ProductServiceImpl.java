@@ -47,6 +47,7 @@ public class ProductServiceImpl implements ProductService {
         product.setImage(productDTO.getImage());
         product.setMrp(productDTO.getMrp());
         product.setSellingPrice(productDTO.getSellingPrice());
+        product.setColor(productDTO.getColor());
         product.setBrand(productDTO.getBrand());
         product.setUpdatedAt(LocalDateTime.now());
         if(productDTO.getCategoryId()!=null){
