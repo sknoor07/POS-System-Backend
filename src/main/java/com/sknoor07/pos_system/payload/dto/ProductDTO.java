@@ -1,5 +1,6 @@
 package com.sknoor07.pos_system.payload.dto;
 
+import com.sknoor07.pos_system.modals.category.Category;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -12,10 +13,11 @@ public class ProductDTO {
     private String sku;
     private String description;
     private String image;
-    //private Category category;
+    private CategoryDTO categoryDTO;
     private Double mrp;
     private Double sellingPrice;
     private String brand;
+    private String color;
     private Long storeId;
     private Long categoryId;
     private LocalDateTime createdAt;

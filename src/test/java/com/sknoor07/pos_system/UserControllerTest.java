@@ -37,7 +37,7 @@ class UserControllerTest {
 
         User requester = new User();
         requester.setId(userId);
-        requester.setRole(UserRole.ROLE_USER);
+        requester.setRole(UserRole.ROLE_STORE_ADMIN);
         requester.setEmail("user@example.com");
         requester.setFullName("User Name");
 
@@ -106,7 +106,7 @@ class UserControllerTest {
 
         User requester = new User();
         requester.setId(2L);
-        requester.setRole(UserRole.ROLE_USER);
+        requester.setRole(UserRole.ROLE_STORE_ADMIN);
 
         when(userService.getUserFromJwtToken(token)).thenReturn(requester);
 
