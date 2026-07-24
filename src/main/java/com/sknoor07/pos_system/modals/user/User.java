@@ -34,6 +34,7 @@ public class User {
     private String phoneNumber;
 
     @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
     private UserRole role;
 
     private LocalDateTime createdAt, updatedAt, lastLoginAt;

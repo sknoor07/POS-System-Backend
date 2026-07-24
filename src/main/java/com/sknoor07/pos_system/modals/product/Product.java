@@ -1,5 +1,6 @@
 package com.sknoor07.pos_system.modals.product;
 
+import com.sknoor07.pos_system.modals.category.Category;
 import com.sknoor07.pos_system.modals.store.Store;
 import jakarta.persistence.*;
 import lombok.*;
@@ -27,7 +28,8 @@ public class Product {
 
     private String image;
 
-    //private Category category;
+    @ManyToOne
+    private Category category;
 
     private Double mrp;
 
@@ -37,6 +39,8 @@ public class Product {
 
     @ManyToOne
     private Store store;
+
+    private String color;
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
