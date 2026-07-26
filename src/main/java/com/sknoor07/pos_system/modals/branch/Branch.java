@@ -59,5 +59,10 @@ public class Branch {
         updatedAt = LocalDateTime.now();
     }
 
+    @Override
+    public String toString(){
+        return "Branch [id=" + id + ", name=" + name + ", address=" + address +"]";
+    }
+
 
 }

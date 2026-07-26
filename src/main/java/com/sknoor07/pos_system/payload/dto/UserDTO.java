@@ -2,6 +2,8 @@ package com.sknoor07.pos_system.payload.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.sknoor07.pos_system.modals.user.UserRole;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import lombok.Data;
 import java.time.LocalDateTime;
 
@@ -19,7 +21,12 @@ public class UserDTO {
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
 
+    @Enumerated(EnumType.STRING)
     private UserRole role;
+
+    private Long branchId;
+
+    private Long storeId;
 
     private LocalDateTime createdAt, updatedAt, lastLoginAt;
 }
