@@ -31,7 +31,7 @@ public class ProductController {
     }
 
     @GetMapping("/store/{storeId}")
-    public ResponseEntity<List<ProductDTO>> createProduct(@PathVariable Long storeId) throws Exception {
+    public ResponseEntity<List<ProductDTO>> getProductByStoreId(@PathVariable Long storeId) throws Exception {
 
         return ResponseEntity.status(HttpStatus.OK).body(productService.getProductsByStoreId(storeId));
     }

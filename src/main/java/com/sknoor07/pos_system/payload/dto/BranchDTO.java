@@ -3,8 +3,10 @@ package com.sknoor07.pos_system.payload.dto;
 import com.sknoor07.pos_system.modals.store.Store;
 import com.sknoor07.pos_system.modals.user.User;
 import jakarta.persistence.ElementCollection;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -12,6 +14,8 @@ import java.util.Set;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class BranchDTO {
 
     private Long id;

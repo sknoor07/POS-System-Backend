@@ -30,6 +30,9 @@ public class BranchServiceImpl implements BranchService {
         User currentUser= userService.getCurrentUser();
         Store store = storeRepository.findByStoreAdminId(currentUser.getId());
         Branch branch = BranchMapper.toBranch(branchDTO,store);
+        if (store == null) {
+            throw new IllegalStateException("Current user is not assigned to a store");
+        }
         Branch savedBranch = branchRepository.save(branch);
         return BranchMapper.toBranchDto(savedBranch);
     }

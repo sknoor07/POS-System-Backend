@@ -38,8 +38,6 @@ public class BranchMapper {
                 .workingDays(branchDTO.getWorkingDays())
                 .openTime(branchDTO.getOpenTime())
                 .closeTime(branchDTO.getCloseTime())
-                .createdAt(branchDTO.getCreatedAt())
-                .updatedAt(branchDTO.getUpdatedAt())
                 .store(store)
                 .build();
     }
