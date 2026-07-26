@@ -45,7 +45,7 @@ public class InventoryController {
 
     @GetMapping("/branch/{branchId}")
     public ResponseEntity<List<InventoryDTO>> getAllInventoryByBranchID(@PathVariable Long branchId) throws Exception {
-        return ResponseEntity.status(HttpStatus.CREATED).body(inventoryService.getAllInventoryByBranchID(branchId));
+        return ResponseEntity.status(HttpStatus.OK).body(inventoryService.getAllInventoryByBranchID(branchId));
     }
 
 

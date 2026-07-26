@@ -32,10 +32,26 @@ public class InventoryServiceImpl implements InventoryService {
         if(branch ==null || product ==null){
             throw new Exception("Branch or Product not found...");
         }
-         Inventory inventory= InventoryMapper.toInventory(inventoryDTO,branch,product);
-        inventory.setBranch(branch);
-        return InventoryMapper.toInventoryDTO(inventoryRepository.save(inventory));
+        
+        Inventory existing = inventoryRepository.findByProductIdAndBranchId(product.getId(), branch.getId());
+        if (existing != null) {
+            existing.setQuantity(existing.getQuantity() + inventoryDTO.getQuantity());
+            return InventoryMapper.toInventoryDTO(inventoryRepository.save(existing));
+        }
 
+        Inventory inventory= InventoryMapper.toInventory(inventoryDTO,branch,product);
+        inventory.setBranch(branch);
+
+        try {
+            return InventoryMapper.toInventoryDTO(inventoryRepository.saveAndFlush(inventory));
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            Inventory concurrentExisting = inventoryRepository.findByProductIdAndBranchId(product.getId(), branch.getId());
+            if (concurrentExisting != null) {
+                concurrentExisting.setQuantity(concurrentExisting.getQuantity() + inventoryDTO.getQuantity());
+                return InventoryMapper.toInventoryDTO(inventoryRepository.save(concurrentExisting));
+            }
+            throw new Exception("Concurrent conflict when saving inventory record", e);
+        }
     }
 
     @Override
