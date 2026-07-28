@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 public class OrderMapper {
     public static OrderDTO toDTO(Order order) {
         return OrderDTO.builder()
+                .id(order.getId())
                 .totalAmount(order.getTotalAmount())
                 .createdAt(order.getCreatedAt())
                 .branchId(order.getBranch().getId())

@@ -8,6 +8,7 @@ public class OrderItemMapper {
     public static OrderItemDTO toDto(OrderItem orderItem) {
         if(orderItem == null) return null;
         return OrderItemDTO.builder()
+                .id(orderItem.getId())
                 .quantity(orderItem.getQuantity())
                 .price(orderItem.getPrice())
                 .productId(orderItem.getProduct().getId())
