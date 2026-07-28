@@ -13,6 +13,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -23,7 +24,7 @@ import java.util.List;
 public class OrderDTO {
     private Long id;
 
-    private Double totalAmount;
+    private BigDecimal totalAmount;
 
     private LocalDateTime createdAt;
 

@@ -4,6 +4,8 @@ import com.sknoor07.pos_system.modals.product.Product;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
+
 @Entity
 @Getter
 @Setter
@@ -19,7 +21,7 @@ public class OrderItem {
 
     private Integer quantity;
 
-    private Double price;
+    private BigDecimal price;
 
     @ManyToOne
     private Product product;

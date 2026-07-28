@@ -6,6 +6,7 @@ import com.sknoor07.pos_system.modals.user.User;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -14,15 +15,16 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Builder
+@Table(name = "orders")
 public class Order {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    private Double totalAmount;
+    private BigDecimal totalAmount;
 
     private LocalDateTime createdAt;
 

@@ -20,6 +20,7 @@ import org.hibernate.ObjectNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -35,27 +36,46 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public OrderDTO createOrder(OrderDTO orderDTO) throws Exception {
-        User cashier= userService.getCurrentUser();
-        Branch branch= cashier.getBranch();
-        if(branch==null){
+        User cashier = userService.getCurrentUser();
+        Branch branch = cashier.getBranch();
+        if (branch == null) {
             throw new Exception("Cashier is Not Assigned to a branch");
         }
-        Order order1= Order.builder()
+
+        // Validate order items
+        List<OrderItemDTO> orderItemsDTO = orderDTO.getOrderItem();
+        if (orderItemsDTO == null || orderItemsDTO.isEmpty()) {
+            throw new IllegalArgumentException("Order must contain at least one item");
+        }
+
+        for (OrderItemDTO item : orderItemsDTO) {
+            if (item.getProductId() == null) {
+                throw new IllegalArgumentException("Order item product ID cannot be null");
+            }
+            if (item.getQuantity() == null || item.getQuantity() <= 0) {
+                throw new IllegalArgumentException("Order item quantity must be positive");
+            }
+        }
+
+        Order order1 = Order.builder()
                 .branch(branch)
                 .cashier(cashier)
                 .customer(orderDTO.getCustomer())
                 .paymentType(orderDTO.getPaymentType())
+                .orderStatus(OrderStatus.PENDING)
                 .build();
-        List<OrderItem> orderItems= orderDTO.getOrderItem().stream().map(item->{
-            Product product= productRepository.findById(item.getProductId()).orElseThrow(()->new EntityNotFoundException("Product Id Missing in Order"));
-            return OrderItem.builder().product(product).quantity(item.getQuantity()).price(product.getSellingPrice()*item.getQuantity()).order(order1).build();
+        List<OrderItem> orderItems = orderItemsDTO.stream().map(item -> {
+            Product product = productRepository.findById(item.getProductId()).orElseThrow(() -> new EntityNotFoundException("Product not found with id: " + item.getProductId()));
+            return OrderItem.builder()
+                    .product(product)
+                    .quantity(item.getQuantity())
+                    .price(BigDecimal.valueOf(product.getSellingPrice()).multiply(new BigDecimal(item.getQuantity())))
+                    .order(order1).build();
         }).toList();
-        double total= orderItems.stream().mapToDouble(OrderItem::getPrice).sum();
+        BigDecimal total = orderItems.stream().map(OrderItem::getPrice).reduce(BigDecimal.ZERO, BigDecimal::add);
         order1.setTotalAmount(total);
         order1.setOrderItems(orderItems);
         return OrderMapper.toDTO(orderRepository.save(order1));
-
-
     }
 
     @Override
@@ -97,7 +117,7 @@ public class OrderServiceImpl implements OrderService {
         LocalDate today = LocalDate.now();
         LocalDateTime start= today.atStartOfDay();
         LocalDateTime end= today.plusDays(1).atStartOfDay();
-        return orderRepository.findByBranchIdAndCreatedAtBetween(branchId,start,end).stream().map(OrderMapper::toDTO).toList();
+        return orderRepository.findByBranchIdAndCreatedAtGreaterThanEqualAndCreatedAtLessThan(branchId,start,end).stream().map(OrderMapper::toDTO).toList();
     }
 
     @Override
