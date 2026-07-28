@@ -66,20 +66,22 @@ public class OrderServiceImpl implements OrderService {
                 .paymentType(orderDTO.getPaymentType())
                 .orderStatus(OrderStatus.PENDING)
                 .build();
+        // Persist the parent order first so it has a generated ID for the FK
+        Order savedOrder = orderRepository.save(order1);
+
         List<OrderItem> orderItems = orderItemsDTO.stream().map(item -> {
             Product product = productRepository.findById(item.getProductId()).orElseThrow(() -> new EntityNotFoundException("Product not found with id: " + item.getProductId()));
-            OrderItem orderItem= OrderItem.builder()
-                    .id(item.getId())
+            OrderItem orderItem = OrderItem.builder()
                     .product(product)
                     .quantity(item.getQuantity())
                     .price(BigDecimal.valueOf(product.getSellingPrice()).multiply(new BigDecimal(item.getQuantity())))
-                    .order(order1).build();
+                    .order(savedOrder).build();
             return orderItemsRepository.save(orderItem);
         }).toList();
         BigDecimal total = orderItems.stream().map(OrderItem::getPrice).reduce(BigDecimal.ZERO, BigDecimal::add);
-        order1.setTotalAmount(total);
-        order1.setOrderItems(orderItems);
-        return OrderMapper.toDTO(orderRepository.save(order1));
+        savedOrder.setTotalAmount(total);
+        savedOrder.setOrderItems(orderItems);
+        return OrderMapper.toDTO(orderRepository.save(savedOrder));
     }
 
     @Override
