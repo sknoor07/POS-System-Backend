@@ -12,6 +12,7 @@ import com.sknoor07.pos_system.modals.product.Product;
 import com.sknoor07.pos_system.modals.user.User;
 import com.sknoor07.pos_system.payload.dto.OrderDTO;
 import com.sknoor07.pos_system.payload.dto.OrderItemDTO;
+import com.sknoor07.pos_system.repository.OrderItemsRepository;
 import com.sknoor07.pos_system.repository.OrderRepository;
 import com.sknoor07.pos_system.repository.ProductRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -33,6 +34,7 @@ public class OrderServiceImpl implements OrderService {
     private final UserService userService;
     private final ProductRepository productRepository;
     private final OrderRepository orderRepository;
+    private final OrderItemsRepository orderItemsRepository;
 
     @Override
     public OrderDTO createOrder(OrderDTO orderDTO) throws Exception {
@@ -66,11 +68,13 @@ public class OrderServiceImpl implements OrderService {
                 .build();
         List<OrderItem> orderItems = orderItemsDTO.stream().map(item -> {
             Product product = productRepository.findById(item.getProductId()).orElseThrow(() -> new EntityNotFoundException("Product not found with id: " + item.getProductId()));
-            return OrderItem.builder()
+            OrderItem orderItem= OrderItem.builder()
+                    .id(item.getId())
                     .product(product)
                     .quantity(item.getQuantity())
                     .price(BigDecimal.valueOf(product.getSellingPrice()).multiply(new BigDecimal(item.getQuantity())))
                     .order(order1).build();
+            return orderItemsRepository.save(orderItem);
         }).toList();
         BigDecimal total = orderItems.stream().map(OrderItem::getPrice).reduce(BigDecimal.ZERO, BigDecimal::add);
         order1.setTotalAmount(total);
