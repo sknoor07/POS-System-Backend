@@ -18,4 +18,13 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResposne> handleIllegalArgumentException(IllegalArgumentException ex) {
         return new ResponseEntity<>(new ApiResposne(ex.getMessage()), HttpStatus.BAD_REQUEST);
     }
+    @ExceptionHandler(OrderNotFoundException.class)
+    public ResponseEntity<ApiResposne> handleOrderNotFoundException(ResourceNotFoundException ex) {
+        return new ResponseEntity<>(new ApiResposne(ex.getMessage()), HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(RefundNotFound.class)
+    public ResponseEntity<ApiResposne> handleRefundNotFoundException(ResourceNotFoundException ex) {
+        return new ResponseEntity<>(new ApiResposne(ex.getMessage()), HttpStatus.NOT_FOUND);
+    }
 }
