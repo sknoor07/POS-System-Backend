@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.sknoor07.pos_system.modals.branch.Branch;
 import com.sknoor07.pos_system.modals.orders.Order;
 import com.sknoor07.pos_system.modals.orders.PaymentType;
+import com.sknoor07.pos_system.modals.shiftreport.ShiftReport;
 import com.sknoor07.pos_system.modals.user.User;
 import jakarta.persistence.*;
 import lombok.*;

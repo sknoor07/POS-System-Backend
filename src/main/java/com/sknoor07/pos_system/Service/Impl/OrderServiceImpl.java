@@ -77,7 +77,7 @@ public class OrderServiceImpl implements OrderService {
                     .price(BigDecimal.valueOf(product.getSellingPrice()).multiply(new BigDecimal(item.getQuantity())))
                     .order(savedOrder).build();
             return orderItemsRepository.save(orderItem);
-        }).toList();
+        }).collect(Collectors.toList());
         BigDecimal total = orderItems.stream().map(OrderItem::getPrice).reduce(BigDecimal.ZERO, BigDecimal::add);
         savedOrder.setTotalAmount(total);
         savedOrder.setOrderItems(orderItems);
