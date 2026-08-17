@@ -1,7 +1,7 @@
 package com.sknoor07.pos_system.Service;
 
 import com.sknoor07.pos_system.modals.shiftreport.PaymentSummary;
-import com.sknoor07.pos_system.payload.dto.branchAnalytics.DailySalesDTO;
+import com.sknoor07.pos_system.payload.dto.branchAnalytics.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
