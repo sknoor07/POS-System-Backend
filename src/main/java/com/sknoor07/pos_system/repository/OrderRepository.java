@@ -38,6 +38,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
         SELECT c.id,c.fullName,Sum(o.totalAmount) as totalRevenue
         FROM Order as o
         JOIN o.cashier as c
+        where o.branch.id=:branchId
         group by c.id,c.fullName
         order by totalRevenue DESC
     """)
@@ -71,29 +72,29 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     @Query("""
        SELECT sum(o.totalAmount)
        From Order as o
-       WHERE o.branch.store.storeAdmin=:storeAdmin
+       WHERE o.branch.store.storeAdmin.id=:storeAdminId
        """)
-    Optional<Double> sumTotalSalesByStoreAdmin(@Param("storeAdminId") Long StoreAdminId);
+    Optional<Double> sumTotalSalesByStoreAdmin(@Param("storeAdminId") Long storeAdminId);
 
     @Query("""
        SELECT count(o)
        From Order as o
-       WHERE o.branch.store.storeAdmin=:storeAdmin
+       WHERE o.branch.store.storeAdmin.id=:storeAdminId
        """)
-    Optional<Double> countByStoreAdmin(@Param("storeAdminId") Long StoreAdminId);
+    Optional<Double> countByStoreAdmin(@Param("storeAdminId") Long storeAdminId);
 
     @Query("""
         SELECT o FROM Order o 
-        WHERE o.branch.store.storeAdmin=:storeAdmin
+        WHERE o.branch.store.storeAdmin.id=:storeAdminId
         AND DATE(o.createdAt) BETWEEN :start AND :end
         """)
-    List<Order> finaAllByStoreAdminAndCreatedAtBetween(@Param("storeAdminId") Long StoreAdminId, @Param("start") LocalDateTime from, @Param("end") LocalDateTime to);
+    List<Order> finaAllByStoreAdminAndCreatedAtBetween(@Param("storeAdminId") Long storeAdminId, @Param("start") LocalDateTime from, @Param("end") LocalDateTime to);
 
     @Query("""
         SELECT
         new com.sknoor07.pos_system.payload.dto.storeAnalytics.TimeSeriesPointDTO(o.createdAt,sum(o.totalAmount))
         FROM Order o
-        WHERE o.branch.store.storeAdmin=:storeAdmin
+        WHERE o.branch.store.storeAdmin.id=:storeAdminId
         AND DATE(o.createdAt) BETWEEN :start AND :end
         GROUP BY o.createdAt
         ORDER BY o.createdAt
@@ -104,7 +105,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
         SELECT
         new com.sknoor07.pos_system.payload.dto.storeAnalytics.PaymentInsightDTO(o.paymentType,sum(o.totalAmount))
         FROM Order o
-        WHERE o.branch.store.storeAdmin=:storeAdmin
+        WHERE o.branch.store.storeAdmin.id=:storeAdminId
         GROUP BY o.paymentType
         """)
     List<PaymentInsightDTO> getSalesByPaymentMethod(@Param("storeAdminId") Long storeAdminId);

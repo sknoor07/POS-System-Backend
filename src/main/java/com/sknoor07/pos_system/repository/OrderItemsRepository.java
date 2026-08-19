@@ -28,7 +28,7 @@ public interface OrderItemsRepository extends JpaRepository<OrderItem, Long> {
             JOIN oi.order as o
             JOIN p.category as c
             WHERE o.branch.id = :branchId
-            AND DATE(o.createdAt) BETWEEN :startDate AND :endDate
+            AND DATE(o.createdAt) BETWEEN :start AND :end
             GROUP BY c.id,c.name
             ORDER BY totalAmount DESC
             """)

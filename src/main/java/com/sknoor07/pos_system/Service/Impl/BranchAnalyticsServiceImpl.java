@@ -89,13 +89,14 @@ public class BranchAnalyticsServiceImpl implements BranchAnalyticsService {
     public List<PaymentSummary> getPaymentMethodBreakdown(Long branchId, LocalDateTime dateTime) {
         List<Object[]> rawData=orderRepository.getPaymentBreakdownByMethod(branchId,dateTime);
 
-        BigDecimal total= rawData.stream().map(obj->new BigDecimal(obj[2].toString())).reduce(BigDecimal.ZERO,BigDecimal::add);
+        BigDecimal total= rawData.stream().map(obj->new BigDecimal(obj[1].toString())).reduce(BigDecimal.ZERO,BigDecimal::add);
 
         return rawData.stream().map(obj->{
             PaymentType paymentType = (PaymentType) obj[0];
             BigDecimal amount= new BigDecimal(obj[1].toString());
             int count = ((Long) obj[2]).intValue();
-            BigDecimal percentage= total.equals(BigDecimal.ZERO) ?BigDecimal.ZERO:amount.divide(new BigDecimal(total.intValue()), 2, RoundingMode.HALF_DOWN);
+            BigDecimal percentage= total.compareTo(BigDecimal.ZERO)==0 ?BigDecimal.ZERO:amount.multiply(BigDecimal.valueOf(100))
+                    .divide(total, 2, RoundingMode.HALF_DOWN);
             return new PaymentSummary(paymentType,amount,count,percentage);
         }).toList();
 
@@ -120,10 +121,8 @@ public class BranchAnalyticsServiceImpl implements BranchAnalyticsService {
 
         BigDecimal cashierGrowth= calculateGrowth(new BigDecimal(todayCashier),new BigDecimal(yesterdayCashier));
 
-        //low stack
+        //low stock
         int todayLowStocks= inventoryRepository.countLowStockItems(branchId);
-        int yesterdayLowStocks= inventoryRepository.countLowStockItems(branchId)==0?12:inventoryRepository.countLowStockItems(branchId);
-        BigDecimal lowStockGrowth= calculateGrowth(new BigDecimal(todayLowStocks),new BigDecimal(yesterdayLowStocks));
 
         return BranchDashboardOverviewDTO.builder()
                 .totalSales(todaySales)
@@ -133,13 +132,12 @@ public class BranchAnalyticsServiceImpl implements BranchAnalyticsService {
                 .activeCashiers(todayCashier)
                 .cashierGrowth(cashierGrowth)
                 .lowStockItems(todayLowStocks)
-                .lowStockGrowth(lowStockGrowth)
                 .build();
 
     }
 
     private BigDecimal calculateGrowth(BigDecimal today, BigDecimal yesterday) {
-        if( yesterday==null|| yesterday.equals(BigDecimal.ZERO)) {
+        if( yesterday==null|| yesterday.compareTo(BigDecimal.ZERO)==0) {
             return BigDecimal.ZERO;
         }
 
