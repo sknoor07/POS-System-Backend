@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -37,8 +38,8 @@ public class BranchAnalyticsController {
     }
 
     @GetMapping("/category-sales")
-    public ResponseEntity<List<CategorySalesDTO>> getCategoryWiseSalesBreakdown(@RequestParam Long branchId, @RequestParam @DateTimeFormat(iso=DateTimeFormat.ISO.DATE_TIME)LocalDateTime dateTime) {
-        return  ResponseEntity.status(HttpStatus.OK).body(branchAnalyticsService.getCategoryWiseSalesBreakdown(branchId,dateTime));
+    public ResponseEntity<List<CategorySalesDTO>> getCategoryWiseSalesBreakdown(@RequestParam Long branchId, @RequestParam @DateTimeFormat(iso=DateTimeFormat.ISO.DATE_TIME) LocalDate date) {
+        return  ResponseEntity.status(HttpStatus.OK).body(branchAnalyticsService.getCategoryWiseSalesBreakdown(branchId,date));
     }
 
     @GetMapping("/today-overview")
@@ -47,8 +48,13 @@ public class BranchAnalyticsController {
     }
 
     @GetMapping("/payment-breakdown")
-    public ResponseEntity<List<PaymentSummary>> getPaymentSummary(@RequestParam Long branchId, @RequestParam @DateTimeFormat(iso=DateTimeFormat.ISO.DATE_TIME)LocalDateTime dateTime) {
-        return  ResponseEntity.status(HttpStatus.OK).body(branchAnalyticsService.getPaymentMethodBreakdown(branchId,dateTime));
+    public ResponseEntity<List<PaymentSummary>> getPaymentSummary(
+            @RequestParam Long branchId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+
+        return ResponseEntity.ok(
+                branchAnalyticsService.getPaymentMethodBreakdown(branchId, date)
+        );
     }
 
 }
