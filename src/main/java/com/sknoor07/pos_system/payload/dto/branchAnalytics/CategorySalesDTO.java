@@ -10,7 +10,7 @@ import java.math.BigDecimal;
 @Data@Builder
 public class CategorySalesDTO {
     private String categoryName;
-    private Long totalSales;
+    private BigDecimal totalSales;
     private Long quantitySold;
 
 }

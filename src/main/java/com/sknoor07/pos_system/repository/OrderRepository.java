@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -35,7 +36,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
 
     @Query("""
-        SELECT c.id,c.fullName,Sum(o.totalAmount) as totalRevenue
+        SELECT c.id,c.fullName,Sum(o.totalAmount),count(o) as totalRevenue
         FROM Order as o
         JOIN o.cashier as c
         where o.branch.id=:branchId
@@ -49,7 +50,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
             where o.branch.id = :branchId
             AND DATE(o.createdAt)= :date
         """)
-    int countOrdersByBranchAndDate(@Param("branchId") Long branchId, @Param("date") LocalDateTime date);
+    int countOrdersByBranchAndDate(@Param("branchId") Long branchId, @Param("date") LocalDate date);
 
 
     @Query("""
@@ -57,7 +58,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
             where o.branch.id = :branchId
             AND DATE(o.createdAt)= :date
         """)
-    int countDistinctCashierByBranchAndDate(@Param("branchId") Long branchId,@Param("date") LocalDateTime date);
+    int countDistinctCashierByBranchAndDate(@Param("branchId") Long branchId,@Param("date") LocalDate date);
 
     @Query("""
         SELECT
@@ -67,7 +68,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
         AND DATE(o.createdAt)= :date
         GROUP BY o.paymentType
         """)
-    List<Object[]> getPaymentBreakdownByMethod(@Param("branchId") Long branchId, @Param("date") LocalDateTime date);
+    List<Object[]> getPaymentBreakdownByMethod(@Param("branchId") Long branchId, @Param("date") LocalDate date);
 
     @Query("""
        SELECT sum(o.totalAmount)

@@ -67,26 +67,27 @@ public class BranchAnalyticsServiceImpl implements BranchAnalyticsService {
             Long cashierId = (Long) obj[0];
             String name = (String) obj[1];
             BigDecimal totalAmount= (BigDecimal) obj[2];
-            return CashierPerformanceDTO.builder().cashierId(cashierId).cashierName(name).totalRevenue(totalAmount).build();
+            Long totalOrders = (Long) obj[3];
+            return CashierPerformanceDTO.builder().cashierId(cashierId).cashierName(name).totalRevenue(totalAmount).totalOrders(totalOrders).build();
         }).toList();
     }
 
     @Override
-    public List<CategorySalesDTO> getCategoryWiseSalesBreakdown(Long branchId, LocalDateTime dateTime) {
-        LocalDateTime startDate = dateTime.toLocalDate().atStartOfDay();
-        LocalDateTime endDate = dateTime.toLocalDate().atTime(LocalTime.MAX);
+    public List<CategorySalesDTO> getCategoryWiseSalesBreakdown(Long branchId, LocalDate dateTime) {
+        LocalDateTime startDate = dateTime.atStartOfDay();
+        LocalDateTime endDate = dateTime.atTime(LocalTime.MAX);
 
         List<Object[]> rawData= orderItemsRepository.getCategoryWiseSales(branchId,startDate,endDate);
 
 
         return rawData.stream().map(obj->{
-            return CategorySalesDTO.builder().categoryName((String) obj[0]).totalSales((Long) obj[1]).quantitySold((Long) obj[2]).build();
+            return CategorySalesDTO.builder().categoryName((String) obj[0]).totalSales((BigDecimal) obj[1]).quantitySold((Long) obj[2]).build();
         }).toList();
 
     }
 
     @Override
-    public List<PaymentSummary> getPaymentMethodBreakdown(Long branchId, LocalDateTime dateTime) {
+    public List<PaymentSummary> getPaymentMethodBreakdown(Long branchId, LocalDate dateTime) {
         List<Object[]> rawData=orderRepository.getPaymentBreakdownByMethod(branchId,dateTime);
 
         BigDecimal total= rawData.stream().map(obj->new BigDecimal(obj[1].toString())).reduce(BigDecimal.ZERO,BigDecimal::add);
@@ -104,10 +105,10 @@ public class BranchAnalyticsServiceImpl implements BranchAnalyticsService {
 
     @Override
     public BranchDashboardOverviewDTO getBranchOverview(Long branchId) {
-        LocalDateTime today = LocalDateTime.now();
-        LocalDateTime yesterday = today.minusDays(1);
-        BigDecimal todaySales= orderRepository.getTotalSalesBetween(branchId,today.toLocalDate().atStartOfDay(),today.toLocalDate().atTime(LocalTime.MAX)).orElse(BigDecimal.ZERO);
-        BigDecimal yesterdaySales= orderRepository.getTotalSalesBetween(branchId,yesterday.toLocalDate().atStartOfDay(),yesterday.toLocalDate().atTime(LocalTime.MAX)).orElse(BigDecimal.ZERO);
+        LocalDate today = LocalDate.now();
+        LocalDate yesterday = today.minusDays(1);
+        BigDecimal todaySales= orderRepository.getTotalSalesBetween(branchId,today.atStartOfDay(),today.atTime(LocalTime.MAX)).orElse(BigDecimal.ZERO);
+        BigDecimal yesterdaySales= orderRepository.getTotalSalesBetween(branchId,yesterday.atStartOfDay(),yesterday.atTime(LocalTime.MAX)).orElse(BigDecimal.ZERO);
         BigDecimal salesGrowth= calculateGrowth(todaySales,yesterdaySales);
 
         int todayOrders= orderRepository.countOrdersByBranchAndDate(branchId,today);
@@ -123,6 +124,7 @@ public class BranchAnalyticsServiceImpl implements BranchAnalyticsService {
 
         //low stock
         int todayLowStocks= inventoryRepository.countLowStockItems(branchId);
+
 
         return BranchDashboardOverviewDTO.builder()
                 .totalSales(todaySales)
