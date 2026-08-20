@@ -69,7 +69,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
         AND DATE(o.createdAt)= :date
         GROUP BY o.paymentType
         """)
-    List<Object[]> getPaymentBreakdownByMethod(@Param("branchId") Long storeAdminId, @Param("date") LocalDate date);
+    List<Object[]> getPaymentBreakdownByMethod(@Param("storeAdminId") Long storeAdminId, @Param("date") LocalDate date);
 
     @Query("""
        SELECT sum(o.totalAmount)

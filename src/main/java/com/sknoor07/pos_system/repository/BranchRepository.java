@@ -20,7 +20,7 @@ public interface BranchRepository extends JpaRepository<Branch , Long> {
     int countByStoreAdminId(@Param("storeAdminId") Long storeAdminId);
 
     @Query("""
-        Select count(b) from Branch b where b.store.storeAdmin.id=:storeAdminId and Month(b.createdAt)=MONTH(current_date)
+        Select count(b) from Branch b where b.store.storeAdmin.id=:storeAdminId and YEAR(b.createdAt)=YEAR(current_date) and MONTH(b.createdAt)=MONTH(current_date)
 """)
     int countNewBranchesThisMonth(@Param("storeAdminId") Long storeAdminId);
 

@@ -25,11 +25,16 @@ public interface RefundRepository extends JpaRepository<Refund, Long> {
         int countByStoreAdminId(@Param("storeAdminId") Long storeAdminId);
 
         @Query("""
-            SELECT r.reason
+            SELECT DISTINCT r.reason
             FROM Refund r
-            WHERE r.branch.store.storeAdmin.id=:storeAdminId
-            GROUP BY function('DATE',r.createdAt)
-            HAVING SUM(r.amount)>5000
+            WHERE r.branch.store.storeAdmin.id = :storeAdminId
+            AND function('DATE', r.createdAt) IN (
+                SELECT function('DATE', r2.createdAt)
+                FROM Refund r2
+                WHERE r2.branch.store.storeAdmin.id = :storeAdminId
+                GROUP BY function('DATE', r2.createdAt)
+                HAVING SUM(r2.amount) > 5000
+            )
         """)
         List<String> findRefundSpikes(@Param("storeAdminId") Long storeAdminId);
 }
