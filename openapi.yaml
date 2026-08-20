@@ -1,0 +1,1792 @@
+openapi: 3.0.3
+info:
+  title: Point of Sale (POS) System API
+  version: 1.0.0
+  description: >
+    Comprehensive REST API documentation for POS System Backend featuring multi-branch management,
+    real-time analytics, inventory control, cashier shift management, refund processing, and payment integration.
+  contact:
+    name: POS System Support
+    email: support@pos-system.com
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0
+
+servers:
+  - url: http://localhost:8080
+    description: Local Development Server
+
+security:
+  - BearerAuth: []
+
+paths:
+  # ---------------------------------------------------------------------------
+  # Authentication
+  # ---------------------------------------------------------------------------
+  /auth/signup:
+    post:
+      tags:
+        - Authentication
+      summary: User Signup
+      description: Registers a new user (Store Admin, Branch Manager, Cashier, etc.) in the POS system and returns a JWT authentication token.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserDTO'
+      responses:
+        '201':
+          description: User successfully registered and JWT returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Bad Request / Email already exists
+
+  /auth/signin:
+    post:
+      tags:
+        - Authentication
+      summary: User Signin / Login
+      description: Authenticates user credentials (email & password) and returns a valid JWT authentication token.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserDTO'
+      responses:
+        '200':
+          description: Authentication successful and JWT returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Invalid credentials / Unauthorized
+
+  # ---------------------------------------------------------------------------
+  # User Profile Management
+  # ---------------------------------------------------------------------------
+  /api/user/profile:
+    get:
+      tags:
+        - User Profile Management
+      summary: Get Authenticated User Profile
+      description: Retrieves the user profile and role of the currently authenticated user from their JWT Bearer token.
+      responses:
+        '200':
+          description: Successfully retrieved user profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDTO'
+        '401':
+          description: Unauthorized / Invalid JWT token
+
+  /api/user/{id}:
+    get:
+      tags:
+        - User Profile Management
+      summary: Get User Profile by ID
+      description: Retrieves user details by user ID (restricted to self, Store Admin, Store Manager, or Branch Manager).
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the target user
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Successfully retrieved user details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDTO'
+        '403':
+          description: Access denied
+
+  # ---------------------------------------------------------------------------
+  # Store Management
+  # ---------------------------------------------------------------------------
+  /api/store:
+    post:
+      tags:
+        - Store Management
+      summary: Create Store
+      description: Registers a new store for the authenticated store admin user.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StoreDTO'
+      responses:
+        '201':
+          description: Store successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StoreDTO'
+    get:
+      tags:
+        - Store Management
+      summary: Get All Stores
+      description: Retrieves a list of all registered stores in the system.
+      responses:
+        '200':
+          description: Successfully retrieved stores list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/StoreDTO'
+
+  /api/store/{id}:
+    get:
+      tags:
+        - Store Management
+      summary: Get Store by ID
+      description: Retrieves store details by store ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Successfully retrieved store details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StoreDTO'
+    put:
+      tags:
+        - Store Management
+      summary: Update Store
+      description: Updates an existing store's profile by store ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StoreDTO'
+      responses:
+        '200':
+          description: Store successfully updated
+    delete:
+      tags:
+        - Store Management
+      summary: Delete Store
+      description: Deletes a store by store ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Store successfully deleted
+
+  /api/store/admin:
+    get:
+      tags:
+        - Store Management
+      summary: Get Store for Authenticated Admin
+      description: Retrieves store profile associated with the currently logged-in store admin.
+      responses:
+        '200':
+          description: Successfully retrieved store profile
+
+  /api/store/employee:
+    get:
+      tags:
+        - Store Management
+      summary: Get Store for Authenticated Employee
+      description: Retrieves store details for the currently logged-in employee/cashier.
+      responses:
+        '200':
+          description: Successfully retrieved store details
+
+  /api/store/{id}/moderate:
+    put:
+      tags:
+        - Store Management
+      summary: Moderate Store Status
+      description: Allows Super Admin to update store status (e.g. ACTIVE, INACTIVE, SUSPENDED).
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: status
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [ACTIVE, INACTIVE, SUSPENDED]
+      responses:
+        '200':
+          description: Store status successfully updated
+
+  # ---------------------------------------------------------------------------
+  # Branch Management
+  # ---------------------------------------------------------------------------
+  /api/branch:
+    post:
+      tags:
+        - Branch Management
+      summary: Create Branch
+      description: Creates a new branch associated with a specific store.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BranchDTO'
+      responses:
+        '201':
+          description: Branch successfully created
+
+  /api/branch/{id}:
+    get:
+      tags:
+        - Branch Management
+      summary: Get Branch by ID
+      description: Retrieves branch details by branch ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Successfully retrieved branch details
+    put:
+      tags:
+        - Branch Management
+      summary: Update Branch
+      description: Updates an existing branch's details by branch ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BranchDTO'
+      responses:
+        '200':
+          description: Branch successfully updated
+    delete:
+      tags:
+        - Branch Management
+      summary: Delete Branch
+      description: Deletes a branch by branch ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Branch successfully deleted
+
+  /api/branch/store/{storeId}:
+    get:
+      tags:
+        - Branch Management
+      summary: Get All Branches by Store ID
+      description: Retrieves a list of all branches belonging to a specific store.
+      parameters:
+        - name: storeId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Successfully retrieved branch list
+
+  # ---------------------------------------------------------------------------
+  # Employee Management
+  # ---------------------------------------------------------------------------
+  /api/employee/store/{storeId}:
+    post:
+      tags:
+        - Employee Management
+      summary: Create Store Employee
+      description: Creates a new employee (e.g. Store Admin/Manager) associated with a store.
+      parameters:
+        - name: storeId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserDTO'
+      responses:
+        '201':
+          description: Store employee successfully created
+    get:
+      tags:
+        - Employee Management
+      summary: Find All Store Employees
+      description: Retrieves all employees for a store, optionally filtered by user role.
+      parameters:
+        - name: storeId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: userRole
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successfully retrieved store employees list
+
+  /api/employee/branch/{branchId}:
+    post:
+      tags:
+        - Employee Management
+      summary: Create Branch Employee
+      description: Creates a new employee (e.g. Cashier, Branch Manager) assigned to a specific branch.
+      parameters:
+        - name: branchId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserDTO'
+      responses:
+        '201':
+          description: Branch employee successfully created
+    get:
+      tags:
+        - Employee Management
+      summary: Find All Branch Employees
+      description: Retrieves all employees assigned to a specific branch, optionally filtered by role.
+      parameters:
+        - name: branchId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: userRole
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successfully retrieved branch employees list
+
+  /api/employee/{employeeId}:
+    put:
+      tags:
+        - Employee Management
+      summary: Update Employee
+      description: Updates employee details (name, email, role, phone) by employee ID.
+      parameters:
+        - name: employeeId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserDTO'
+      responses:
+        '200':
+          description: Employee successfully updated
+    delete:
+      tags:
+        - Employee Management
+      summary: Delete Employee
+      description: Removes an employee by employee ID.
+      parameters:
+        - name: employeeId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Employee successfully deleted
+
+  # ---------------------------------------------------------------------------
+  # Category Management
+  # ---------------------------------------------------------------------------
+  /api/categories:
+    post:
+      tags:
+        - Category Management
+      summary: Create Category
+      description: Creates a new product category for a store.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryDTO'
+      responses:
+        '201':
+          description: Category successfully created
+
+  /api/categories/store/{storeId}:
+    get:
+      tags:
+        - Category Management
+      summary: Get Categories by Store ID
+      description: Retrieves all product categories belonging to a specific store.
+      parameters:
+        - name: storeId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Successfully retrieved categories list
+
+  /api/categories/{id}:
+    put:
+      tags:
+        - Category Management
+      summary: Update Category
+      description: Updates an existing category by category ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryDTO'
+      responses:
+        '200':
+          description: Category successfully updated
+    delete:
+      tags:
+        - Category Management
+      summary: Delete Category
+      description: Deletes a category by category ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Category successfully deleted
+
+  # ---------------------------------------------------------------------------
+  # Product Management
+  # ---------------------------------------------------------------------------
+  /api/products:
+    post:
+      tags:
+        - Product Management
+      summary: Create Product
+      description: Creates a new catalog product (SKU, price, barcode, category, image) for a store.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductDTO'
+      responses:
+        '201':
+          description: Product successfully created
+
+  /api/products/store/{storeId}:
+    get:
+      tags:
+        - Product Management
+      summary: Get Products by Store ID
+      description: Retrieves all products belonging to a specific store catalog.
+      parameters:
+        - name: storeId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Successfully retrieved store products catalog
+
+  /api/products/{id}:
+    patch:
+      tags:
+        - Product Management
+      summary: Update Product
+      description: Updates an existing product's details (name, price, SKU, image, category) by product ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductDTO'
+      responses:
+        '200':
+          description: Product successfully updated
+    delete:
+      tags:
+        - Product Management
+      summary: Delete Product
+      description: Deletes a product by product ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Product successfully deleted
+
+  /api/products/store/{storeId}/search:
+    get:
+      tags:
+        - Product Management
+      summary: Search Products by Keyword
+      description: Searches store products by name, SKU, or description keyword.
+      parameters:
+        - name: storeId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: keyword
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successfully retrieved matching products
+
+  # ---------------------------------------------------------------------------
+  # Inventory Management
+  # ---------------------------------------------------------------------------
+  /api/inventories:
+    post:
+      tags:
+        - Inventory Management
+      summary: Create Inventory
+      description: Initializes an inventory record for a product at a branch.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InventoryDTO'
+      responses:
+        '201':
+          description: Inventory record successfully created
+
+  /api/inventories/{id}:
+    get:
+      tags:
+        - Inventory Management
+      summary: Get Inventory by ID
+      description: Retrieves inventory record details by inventory ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Successfully retrieved inventory record
+    put:
+      tags:
+        - Inventory Management
+      summary: Update Inventory
+      description: Updates stock quantities or alert thresholds for an inventory record.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InventoryDTO'
+      responses:
+        '200':
+          description: Inventory record successfully updated
+    delete:
+      tags:
+        - Inventory Management
+      summary: Delete Inventory
+      description: Deletes an inventory record by ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Inventory record successfully deleted
+
+  /api/inventories/product/{productId}/branch/{branchId}:
+    get:
+      tags:
+        - Inventory Management
+      summary: Get Inventory by Product and Branch
+      description: Retrieves the inventory stock level for a specific product at a specific branch.
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: branchId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Successfully retrieved inventory stock level
+
+  /api/inventories/branch/{branchId}:
+    get:
+      tags:
+        - Inventory Management
+      summary: Get All Inventories by Branch ID
+      description: Retrieves all product inventory records associated with a branch.
+      parameters:
+        - name: branchId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Successfully retrieved branch inventory list
+
+  # ---------------------------------------------------------------------------
+  # Customer Management
+  # ---------------------------------------------------------------------------
+  /api/customers:
+    post:
+      tags:
+        - Customer Management
+      summary: Create Customer
+      description: Registers a new customer in the POS system.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerCreateDTO'
+      responses:
+        '201':
+          description: Customer successfully created
+    get:
+      tags:
+        - Customer Management
+      summary: Get All Customers
+      description: Retrieves a complete list of all registered customers.
+      responses:
+        '200':
+          description: Successfully retrieved customers list
+
+  /api/customers/{id}:
+    get:
+      tags:
+        - Customer Management
+      summary: Get Customer by ID
+      description: Retrieves customer profile and loyalty details by customer ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Successfully retrieved customer details
+    put:
+      tags:
+        - Customer Management
+      summary: Update Customer
+      description: Updates an existing customer's contact details or loyalty info.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerUpdateDTO'
+      responses:
+        '200':
+          description: Customer successfully updated
+    delete:
+      tags:
+        - Customer Management
+      summary: Delete Customer
+      description: Deletes a customer by ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Customer successfully deleted
+
+  /api/customers/search:
+    get:
+      tags:
+        - Customer Management
+      summary: Search Customers
+      description: Searches for customers by name, phone, or email with pagination.
+      parameters:
+        - name: keyword
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successfully retrieved paginated search results
+
+  # ---------------------------------------------------------------------------
+  # Order Management
+  # ---------------------------------------------------------------------------
+  /api/orders:
+    post:
+      tags:
+        - Order Management
+      summary: Create Order
+      description: Creates a new order/transaction with line items, applied taxes, discounts, and payment methods (Cash, Card, UPI, Stripe, Razorpay).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderDTO'
+      responses:
+        '201':
+          description: Order successfully created
+
+  /api/orders/{id}:
+    get:
+      tags:
+        - Order Management
+      summary: Get Order by ID
+      description: Retrieves full details of a specific order by order ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Successfully retrieved order details
+
+  /api/orders/branch/{branchId}:
+    get:
+      tags:
+        - Order Management
+      summary: Get Orders by Branch
+      description: Retrieves branch orders with optional filters by customer, cashier, payment type, or order status.
+      parameters:
+        - name: branchId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: customerId
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int64
+        - name: cashierId
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int64
+        - name: paymentType
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [CASH, CARD, UPI, STRIPE, RAZORPAY]
+        - name: orderStatus
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [PENDING, COMPLETED, CANCELLED, REFUNDED]
+      responses:
+        '200':
+          description: Successfully retrieved filtered branch orders
+
+  /api/orders/cashier/{cashierId}:
+    get:
+      tags:
+        - Order Management
+      summary: Get Orders by Cashier ID
+      description: Retrieves all orders processed by a specific cashier.
+      parameters:
+        - name: cashierId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Successfully retrieved cashier orders
+
+  /api/orders/today/branch/{id}:
+    get:
+      tags:
+        - Order Management
+      summary: Get Today's Branch Orders
+      description: Retrieves all orders created today for a specific branch.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Successfully retrieved today's branch orders
+
+  /api/orders/customer/{customerId}:
+    get:
+      tags:
+        - Order Management
+      summary: Get Customer Orders
+      description: Retrieves purchase history for a specific customer.
+      parameters:
+        - name: customerId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Successfully retrieved customer order history
+
+  /api/orders/recent/{branchId}:
+    get:
+      tags:
+        - Order Management
+      summary: Get Recent Orders by Branch
+      description: Retrieves the 5 most recent orders created at a branch.
+      parameters:
+        - name: branchId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Successfully retrieved top 5 recent orders
+
+  # ---------------------------------------------------------------------------
+  # Refund Management
+  # ---------------------------------------------------------------------------
+  /api/refunds:
+    post:
+      tags:
+        - Refund Management
+      summary: Create Refund
+      description: Processes a new refund for an order or item with reason and cash/card reversal details.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefundDTO'
+      responses:
+        '201':
+          description: Refund successfully created
+    get:
+      tags:
+        - Refund Management
+      summary: Get All Refunds
+      description: Retrieves all processed refunds across the system.
+      responses:
+        '200':
+          description: Successfully retrieved refunds list
+
+  /api/refunds/{id}:
+    get:
+      tags:
+        - Refund Management
+      summary: Get Refund by ID
+      description: Retrieves specific refund details by refund ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Successfully retrieved refund details
+    delete:
+      tags:
+        - Refund Management
+      summary: Delete Refund
+      description: Deletes a refund record by ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Refund record successfully deleted
+
+  /api/refunds/cashier/{cashierId}:
+    get:
+      tags:
+        - Refund Management
+      summary: Get Refunds by Cashier ID
+      description: Retrieves all refunds processed by a specific cashier.
+      parameters:
+        - name: cashierId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Successfully retrieved cashier refunds
+
+  /api/refunds/branch/{branchId}:
+    get:
+      tags:
+        - Refund Management
+      summary: Get Refunds by Branch ID
+      description: Retrieves all refunds issued at a specific branch.
+      parameters:
+        - name: branchId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Successfully retrieved branch refunds
+
+  /api/refunds/shift/{shiftId}:
+    get:
+      tags:
+        - Refund Management
+      summary: Get Refunds by Shift Report ID
+      description: Retrieves all refunds processed during a specific cashier shift report.
+      parameters:
+        - name: shiftId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Successfully retrieved shift refunds
+
+  /api/refunds/cashier/{cashierId}/range:
+    get:
+      tags:
+        - Refund Management
+      summary: Get Refunds by Cashier and Date Range
+      description: Retrieves refunds for a cashier within a specific date-time interval.
+      parameters:
+        - name: cashierId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: start
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+        - name: end
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: Successfully retrieved filtered refunds
+
+  # ---------------------------------------------------------------------------
+  # Shift Report Management
+  # ---------------------------------------------------------------------------
+  /api/shift-reports/start:
+    post:
+      tags:
+        - Shift Report Management
+      summary: Start Shift
+      description: Starts a new shift for the authenticated cashier, opening the cash drawer and logging start time.
+      responses:
+        '200':
+          description: Shift successfully started
+
+  /api/shift-reports/end:
+    patch:
+      tags:
+        - Shift Report Management
+      summary: End Shift
+      description: Closes the current active cashier shift, calculating cash drawer total, total sales, and discrepancies.
+      responses:
+        '200':
+          description: Shift successfully ended
+
+  /api/shift-reports/{shiftReportId}:
+    get:
+      tags:
+        - Shift Report Management
+      summary: Get Shift Report by ID
+      description: Retrieves detailed shift report details by shift report ID.
+      parameters:
+        - name: shiftReportId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Successfully retrieved shift report
+
+  /api/shift-reports:
+    get:
+      tags:
+        - Shift Report Management
+      summary: Get All Shift Reports
+      description: Retrieves all shift reports recorded in the system.
+      responses:
+        '200':
+          description: Successfully retrieved shift reports list
+
+  /api/shift-reports/cashier/{cashierId}:
+    get:
+      tags:
+        - Shift Report Management
+      summary: Get Shift Reports by Cashier ID
+      description: Retrieves all past and current shift reports for a specific cashier.
+      parameters:
+        - name: cashierId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Successfully retrieved cashier shift reports
+
+  /api/shift-reports/branch/{branchId}:
+    get:
+      tags:
+        - Shift Report Management
+      summary: Get Shift Reports by Branch ID
+      description: Retrieves all shift reports associated with a specific branch.
+      parameters:
+        - name: branchId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Successfully retrieved branch shift reports
+
+  /api/shift-reports/current:
+    get:
+      tags:
+        - Shift Report Management
+      summary: Get Current Active Shift Progress
+      description: Retrieves real-time progress, current sales, and duration of the authenticated cashier's ongoing shift.
+      responses:
+        '200':
+          description: Successfully retrieved current shift progress
+
+  /api/shift-reports/cashier/{cashierId}/date:
+    get:
+      tags:
+        - Shift Report Management
+      summary: Get Shift Report by Cashier and Date
+      description: Retrieves a cashier's shift report for a specific date and time.
+      parameters:
+        - name: cashierId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: date
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: Successfully retrieved matching shift report
+
+  # ---------------------------------------------------------------------------
+  # Branch Analytics
+  # ---------------------------------------------------------------------------
+  /api/branch-analytics/daily-sales:
+    get:
+      tags:
+        - Branch Analytics
+      summary: Get Daily Sales Chart
+      description: Retrieves daily sales trends for a branch over a specified number of days (default 7).
+      parameters:
+        - name: branchId
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: days
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 7
+      responses:
+        '200':
+          description: Successfully retrieved daily sales chart data
+
+  /api/branch-analytics/top-products:
+    get:
+      tags:
+        - Branch Analytics
+      summary: Get Top Products by Quantity
+      description: Retrieves the top-selling products by quantity along with percentage contribution for a specific branch.
+      parameters:
+        - name: branchId
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Successfully retrieved top products performance data
+
+  /api/branch-analytics/top-cashiers:
+    get:
+      tags:
+        - Branch Analytics
+      summary: Get Top Cashiers Performance
+      description: Retrieves cashier rankings and performance metrics based on processed order count for a branch.
+      parameters:
+        - name: branchId
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Successfully retrieved top cashiers performance data
+
+  /api/branch-analytics/category-sales:
+    get:
+      tags:
+        - Branch Analytics
+      summary: Get Category-wise Sales Breakdown
+      description: Retrieves product category sales breakdown for a branch on a given date.
+      parameters:
+        - name: branchId
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: date
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Successfully retrieved category sales breakdown
+
+  /api/branch-analytics/today-overview:
+    get:
+      tags:
+        - Branch Analytics
+      summary: Get Today's Branch Overview
+      description: Retrieves today's dashboard overview metrics (total sales, order count, active shift count, etc.) for a branch.
+      parameters:
+        - name: branchId
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Successfully retrieved today's branch overview
+
+  /api/branch-analytics/payment-breakdown:
+    get:
+      tags:
+        - Branch Analytics
+      summary: Get Payment Method Breakdown
+      description: Retrieves payment method breakdown (Cash, Card, UPI, etc.) for a branch on a specific date.
+      parameters:
+        - name: branchId
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: date
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Successfully retrieved payment method breakdown
+
+  # ---------------------------------------------------------------------------
+  # Store Analytics
+  # ---------------------------------------------------------------------------
+  /api/store-analytics/{storeAdminId}/sales-trends:
+    get:
+      tags:
+        - Store Analytics
+      summary: Get Sales Trends
+      description: Retrieves time-series sales trend data for a store admin filtered by period (daily, weekly, monthly, yearly).
+      parameters:
+        - name: storeAdminId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: period
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successfully retrieved sales trends
+
+  /api/store-analytics/{storeAdminId}/overview:
+    get:
+      tags:
+        - Store Analytics
+      summary: Get Store Overview Metrics
+      description: Retrieves overall store metrics (total revenue, total orders, active branches, total customers) for a store admin.
+      parameters:
+        - name: storeAdminId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Successfully retrieved store overview
+
+  /api/store-analytics/{storeAdminId}/monthly-sales:
+    get:
+      tags:
+        - Store Analytics
+      summary: Get Monthly Sales Graph
+      description: Retrieves monthly sales data points for graph plotting.
+      parameters:
+        - name: storeAdminId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Successfully retrieved monthly sales data points
+
+  /api/store-analytics/{storeAdminId}/daily-sales:
+    get:
+      tags:
+        - Store Analytics
+      summary: Get Daily Sales Graph
+      description: Retrieves daily sales data points for graph plotting.
+      parameters:
+        - name: storeAdminId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Successfully retrieved daily sales data points
+
+  /api/store-analytics/{storeAdminId}/sales-payment-method:
+    get:
+      tags:
+        - Store Analytics
+      summary: Get Sales by Payment Method
+      description: Retrieves store sales breakdown by payment method.
+      parameters:
+        - name: storeAdminId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Successfully retrieved payment insights
+
+  /api/store-analytics/{storeAdminId}/branch-sales:
+    get:
+      tags:
+        - Store Analytics
+      summary: Get Sales by Branch
+      description: Retrieves sales comparison data across all branches owned by a store admin.
+      parameters:
+        - name: storeAdminId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Successfully retrieved branch sales comparison
+
+  /api/store-analytics/{storeAdminId}/branch-payment-breakdown:
+    get:
+      tags:
+        - Store Analytics
+      summary: Get Branch Payment Breakdown
+      description: Retrieves payment method breakdown across store branches.
+      parameters:
+        - name: storeAdminId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Successfully retrieved branch payment breakdown
+
+  /api/store-analytics/{storeAdminId}/branch-performance:
+    get:
+      tags:
+        - Store Analytics
+      summary: Get Branch Performance
+      description: Retrieves top performing and underperforming branches for a store admin.
+      parameters:
+        - name: storeAdminId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Successfully retrieved branch performance report
+
+  /api/store-analytics/{storeAdminId}/alert:
+    get:
+      tags:
+        - Store Analytics
+      summary: Get Store Alerts
+      description: Retrieves store-level operational alerts (low stock items, refund spikes, inactive cashiers, branches with no sales).
+      parameters:
+        - name: storeAdminId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Successfully retrieved store alerts
+
+  # ---------------------------------------------------------------------------
+  # Super Admin Dashboard
+  # ---------------------------------------------------------------------------
+  /api/super-admin/dashboard/summary:
+    get:
+      tags:
+        - Super Admin Dashboard
+      summary: Get Super Admin Dashboard Summary
+      description: Retrieves high-level summary metrics for the super admin dashboard including total stores, total revenue, active users, and system health.
+      responses:
+        '200':
+          description: Successfully retrieved super admin dashboard summary
+
+  /api/super-admin/dashboard/store-registration:
+    get:
+      tags:
+        - Super Admin Dashboard
+      summary: Get Store Registration Statistics (Last 7 Days)
+      description: Retrieves store registration stats grouped by date over the past 7 days.
+      responses:
+        '200':
+          description: Successfully retrieved store registration stats
+
+  /api/super-admin/dashboard/store-status-distribution:
+    get:
+      tags:
+        - Super Admin Dashboard
+      summary: Get Store Status Distribution
+      description: Retrieves the count and percentage breakdown of stores by operational status (Active, Inactive, Suspended).
+      responses:
+        '200':
+          description: Successfully retrieved store status distribution
+
+# ---------------------------------------------------------------------------
+# Reusable Schemas & Components
+# ---------------------------------------------------------------------------
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Enter your JWT Bearer token obtained from `/auth/login` or `/auth/signup`
+
+  schemas:
+    UserDTO:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        email:
+          type: string
+        password:
+          type: string
+        fullName:
+          type: string
+        phone:
+          type: string
+        role:
+          type: string
+          enum: [ROLE_ADMIN, ROLE_STORE_ADMIN, ROLE_STORE_MANAGER, ROLE_BRANCH_MANAGER, ROLE_BRANCH_CASHIER]
+        storeId:
+          type: integer
+          format: int64
+        branchId:
+          type: integer
+          format: int64
+
+    AuthResponse:
+      type: object
+      properties:
+        jwt:
+          type: string
+        message:
+          type: string
+        role:
+          type: string
+
+    StoreDTO:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        brand:
+          type: string
+        description:
+          type: string
+        storeAdminId:
+          type: integer
+          format: int64
+        status:
+          type: string
+          enum: [ACTIVE, INACTIVE, SUSPENDED]
+
+    BranchDTO:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        address:
+          type: string
+        phone:
+          type: string
+        storeId:
+          type: integer
+          format: int64
+
+    CategoryDTO:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        description:
+          type: string
+        storeId:
+          type: integer
+          format: int64
+
+    ProductDTO:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        sku:
+          type: string
+        price:
+          type: number
+        barcode:
+          type: string
+        image:
+          type: string
+        categoryId:
+          type: integer
+          format: int64
+        storeId:
+          type: integer
+          format: int64
+
+    InventoryDTO:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        productId:
+          type: integer
+          format: int64
+        branchId:
+          type: integer
+          format: int64
+        quantity:
+          type: integer
+        lowStockAlert:
+          type: integer
+
+    CustomerCreateDTO:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+
+    CustomerUpdateDTO:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        loyaltyPoints:
+          type: integer
+
+    OrderDTO:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        branchId:
+          type: integer
+          format: int64
+        cashierId:
+          type: integer
+          format: int64
+        customerId:
+          type: integer
+          format: int64
+        totalAmount:
+          type: number
+        taxAmount:
+          type: number
+        discountAmount:
+          type: number
+        paymentType:
+          type: string
+          enum: [CASH, CARD, UPI, STRIPE, RAZORPAY]
+        orderStatus:
+          type: string
+          enum: [PENDING, COMPLETED, CANCELLED, REFUNDED]
+
+    RefundDTO:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        orderId:
+          type: integer
+          format: int64
+        branchId:
+          type: integer
+          format: int64
+        cashierId:
+          type: integer
+          format: int64
+        amount:
+          type: number
+        reason:
+          type: string
+
+    ShiftReportDTO:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        cashierId:
+          type: integer
+          format: int64
+        branchId:
+          type: integer
+          format: int64
+        startTime:
+          type: string
+          format: date-time
+        endTime:
+          type: string
+          format: date-time
+        startingCash:
+          type: number
+        closingCash:
+          type: number
+        totalSales:
+          type: number
+        status:
+          type: string
