@@ -2,6 +2,7 @@ package com.sknoor07.pos_system.repository;
 
 import com.sknoor07.pos_system.modals.orders.Order;
 import com.sknoor07.pos_system.modals.user.User;
+import com.sknoor07.pos_system.payload.dto.storeAnalytics.BranchSalesDTO;
 import com.sknoor07.pos_system.payload.dto.storeAnalytics.PaymentInsightDTO;
 import com.sknoor07.pos_system.payload.dto.storeAnalytics.TimeSeriesPointDTO;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -64,28 +65,28 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
         SELECT
         o.paymentType,sum(o.totalAmount),count(o)
         FROM Order o
-        WHERE o.branch.id = :branchId
+        WHERE o.branch.store.storeAdmin.id=:storeAdminId
         AND DATE(o.createdAt)= :date
         GROUP BY o.paymentType
         """)
-    List<Object[]> getPaymentBreakdownByMethod(@Param("branchId") Long branchId, @Param("date") LocalDate date);
+    List<Object[]> getPaymentBreakdownByMethod(@Param("storeAdminId") Long storeAdminId, @Param("date") LocalDate date);
 
     @Query("""
        SELECT sum(o.totalAmount)
        From Order as o
        WHERE o.branch.store.storeAdmin.id=:storeAdminId
        """)
-    Optional<Double> sumTotalSalesByStoreAdmin(@Param("storeAdminId") Long storeAdminId);
+    Optional<BigDecimal> sumTotalSalesByStoreAdmin(@Param("storeAdminId") Long storeAdminId);
 
     @Query("""
        SELECT count(o)
        From Order as o
        WHERE o.branch.store.storeAdmin.id=:storeAdminId
        """)
-    Optional<Double> countByStoreAdmin(@Param("storeAdminId") Long storeAdminId);
+    Optional<Integer> countByStoreAdmin(@Param("storeAdminId") Long storeAdminId);
 
     @Query("""
-        SELECT o FROM Order o 
+        SELECT o FROM Order o
         WHERE o.branch.store.storeAdmin.id=:storeAdminId
         AND DATE(o.createdAt) BETWEEN :start AND :end
         """)
@@ -110,4 +111,13 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
         GROUP BY o.paymentType
         """)
     List<PaymentInsightDTO> getSalesByPaymentMethod(@Param("storeAdminId") Long storeAdminId);
+
+    @Query("""
+        SELECT new com.sknoor07.pos_system.payload.dto.storeAnalytics.BranchSalesDTO(o.branch.name,sum(o.totalAmount))
+        FROM Order o
+        WHERE o.branch.store.storeAdmin.id=:storeAdminId
+        GROUP BY o.branch.id
+""")
+    List<BranchSalesDTO> getSalesByBranch(Long storeAdminID);
+
 }
